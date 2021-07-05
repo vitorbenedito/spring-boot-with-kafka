@@ -22,6 +22,7 @@ dependencies {
 	implementation("org.springframework.kafka:spring-kafka")
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-jdbc")
+	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("mysql:mysql-connector-java:5.1.49")
 	implementation("com.zaxxer:HikariCP:4.0.3")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

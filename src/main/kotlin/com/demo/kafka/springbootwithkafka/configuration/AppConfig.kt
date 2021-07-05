@@ -9,7 +9,6 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
 import org.springframework.orm.jpa.JpaVendorAdapter
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
-import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import java.io.IOException
@@ -18,18 +17,17 @@ import javax.sql.DataSource
 
 
 @Configuration
-@EnableAsync
 @EnableScheduling
 @EnableTransactionManagement
 @EnableJpaRepositories(
-    entityManagerFactoryRef = "multitenantEntityManager",
+    entityManagerFactoryRef = "multiTenantEntityManager",
     basePackages = ["com.demo.kafka.springbootwithkafka.repositories"]
 )
 class AppConfig {
 
-    @Bean(name = ["multitenantEntityManager"])
+    @Bean(name = ["multiTenantEntityManager"])
     @Throws(IOException::class)
-    fun multitenantEntityManager(): LocalContainerEntityManagerFactoryBean? {
+    fun multiTenantEntityManager(): LocalContainerEntityManagerFactoryBean? {
         val em = LocalContainerEntityManagerFactoryBean()
         em.dataSource = dataSource()
         em.setPackagesToScan("com.demo.kafka.springbootwithkafka.model")
