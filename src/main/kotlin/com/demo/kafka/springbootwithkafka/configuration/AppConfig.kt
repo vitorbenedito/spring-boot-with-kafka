@@ -1,16 +1,27 @@
 package com.demo.kafka.springbootwithkafka.configuration
 
 import com.demo.kafka.springbootwithkafka.core.multitenant.TenantAwareRoutingSource
+import com.demo.kafka.springbootwithkafka.message.dto.MessageDto
 import com.zaxxer.hikari.HikariDataSource
+import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
+import org.springframework.kafka.core.ConsumerFactory
+import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer
+import org.springframework.kafka.listener.SeekToCurrentErrorHandler
+import org.springframework.kafka.support.converter.RecordMessageConverter
+import org.springframework.kafka.support.converter.StringJsonMessageConverter
 import org.springframework.orm.jpa.JpaVendorAdapter
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter
 import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.util.backoff.BackOff
+import org.springframework.util.backoff.ExponentialBackOff
 import java.io.IOException
 import java.util.*
 import javax.sql.DataSource
@@ -47,6 +58,28 @@ class AppConfig {
         dataSource.afterPropertiesSet()
         return dataSource
     }
+
+    @Bean
+    fun converter(): RecordMessageConverter? {
+        return StringJsonMessageConverter()
+    }
+
+    @Bean
+    fun kafkaListenerContainerFactory(
+        kafkaConsumerFactory: ConsumerFactory<Any?, Any?>?,
+        template: KafkaTemplate<Any?, Any?>?
+    ): ConcurrentKafkaListenerContainerFactory<*, *>? {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, MessageDto>()
+        factory.consumerFactory = kafkaConsumerFactory!!
+        factory.setRecordInterceptor(RecordInterceptorMessageDto())
+        factory.setErrorHandler(
+            SeekToCurrentErrorHandler(
+                DeadLetterPublishingRecoverer(template!!), ExponentialBackOff(3, 1.0)
+            )
+        )
+        return factory
+    }
+
 
     fun tenantOne(): DataSource {
         val dataSource = HikariDataSource()
